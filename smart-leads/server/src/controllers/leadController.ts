@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Response, NextFunction } from 'express';
 import { Parser } from 'json2csv';
 import Lead from '../models/Lead';
-import { AuthRequest, LeadFilters, LeadStatus, LeadSource } from '../types';
+import { AuthRequest, LeadStatus, LeadSource } from '../types';
 import { createError } from '../middleware/errorHandler';
 
 const LIMIT = 10;
@@ -38,7 +38,6 @@ export const getLeads = async (
       ];
     }
 
-    // Sales users only see their own leads
     if (req.user?.role === 'sales') {
       filters.createdBy = req.user.id;
     }
@@ -194,20 +193,21 @@ export const getStats = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-  const matchStage: Record<string, unknown> =
-  req.user?.role === 'sales'
-    ? { createdBy: new mongoose.Types.ObjectId(req.user.id) }
-    : {};
+    const matchStage: Record<string, unknown> =
+      req.user?.role === 'sales'
+        ? { createdBy: new mongoose.Types.ObjectId(req.user.id) }
+        : {};
+
     const [statusStats, sourceStats, total] = await Promise.all([
       Lead.aggregate([
-        { $match: baseFilter },
+        { $match: matchStage },
         { $group: { _id: '$status', count: { $sum: 1 } } },
       ]),
       Lead.aggregate([
-        { $match: baseFilter },
+        { $match: matchStage },
         { $group: { _id: '$source', count: { $sum: 1 } } },
       ]),
-      Lead.countDocuments(baseFilter),
+      Lead.countDocuments(matchStage),
     ]);
 
     res.status(200).json({
