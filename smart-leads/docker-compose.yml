@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: gigflow-smart-leads-mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - gigflow-smart-leads-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: gigflow-smart-leads-server
+    ports:
+      - '5000:5000'
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/gigflow-smart-leads
+      - JWT_SECRET=${JWT_SECRET:-changeme_in_production_please}
+      - JWT_EXPIRES_IN=7d
+      - CLIENT_URL=http://localhost:5173
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - gigflow-smart-leads-network
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: gigflow-smart-leads-client
+    ports:
+      - '5173:80'
+    depends_on:
+      - server
+    networks:
+      - gigflow-smart-leads-network
+    restart: unless-stopped
+
+networks:
+  gigflow-smart-leads-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
