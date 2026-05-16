@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Response, NextFunction } from 'express';
 import { Parser } from 'json2csv';
 import Lead from '../models/Lead';
@@ -193,9 +194,10 @@ export const getStats = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const baseFilter: Record<string, unknown> =
-      req.user?.role === 'sales' ? { createdBy: req.user.id } : {};
-
+  const matchStage: Record<string, unknown> =
+  req.user?.role === 'sales'
+    ? { createdBy: new mongoose.Types.ObjectId(req.user.id) }
+    : {};
     const [statusStats, sourceStats, total] = await Promise.all([
       Lead.aggregate([
         { $match: baseFilter },
