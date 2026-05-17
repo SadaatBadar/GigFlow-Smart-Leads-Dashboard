@@ -22,8 +22,9 @@ export default function RegisterPage() {
   const { isDark, toggleDarkMode } = useDarkMode();
   const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'sales' | 'admin'>('sales');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<AuthFormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<AuthFormData>({
     resolver: zodResolver(schema),
     defaultValues: { role: 'sales' },
   });
@@ -36,6 +37,11 @@ export default function RegisterPage() {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || 'Registration failed');
     }
+  };
+
+  const handleRoleSelect = (role: 'sales' | 'admin') => {
+    setSelectedRole(role);
+    setValue('role', role);
   };
 
   return (
@@ -103,28 +109,38 @@ export default function RegisterPage() {
               <label className="label">Role</label>
               <div className="grid grid-cols-2 gap-2">
                 {(['sales', 'admin'] as const).map((role) => (
-                  <label
+                  <button
                     key={role}
-                    className="relative flex items-center gap-2.5 p-3 border-2 rounded-xl cursor-pointer transition-all has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:bg-brand-950 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                    type="button"
+                    onClick={() => handleRoleSelect(role)}
+                    className={`flex items-center gap-2.5 p-3 border-2 rounded-xl cursor-pointer transition-all text-left
+                      ${selectedRole === role
+                        ? 'border-brand-500 bg-brand-600'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500 bg-transparent'
+                      }`}
                   >
-                    <input
-                      type="radio"
-                      {...register('role')}
-                      value={role}
-                      className="sr-only"
-                    />
-                    <div className="w-4 h-4 rounded-full border-2 border-current flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-brand-600 hidden peer-checked:block" />
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0
+                      ${selectedRole === role ? 'border-white' : 'border-slate-400'}`}
+                    >
+                      {selectedRole === role && (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">{role}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className={`text-sm font-medium capitalize
+                        ${selectedRole === role ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                        {role}
+                      </p>
+                      <p className={`text-xs
+                        ${selectedRole === role ? 'text-brand-100' : 'text-slate-500 dark:text-slate-400'}`}>
                         {role === 'admin' ? 'Full access' : 'Limited access'}
                       </p>
                     </div>
-                  </label>
+                  </button>
                 ))}
               </div>
+              {/* hidden input to keep react-hook-form happy */}
+              <input type="hidden" {...register('role')} value={selectedRole} />
             </div>
 
             <button
