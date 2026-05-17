@@ -105,7 +105,7 @@ export default function RegisterPage() {
                 {(['sales', 'admin'] as const).map((role) => (
                   <label
                     key={role}
-                    className="relative flex items-center gap-2.5 p-3 border-2 rounded-xl cursor-pointer transition-all has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                    className="relative flex items-center gap-2.5 p-3 border-2 rounded-xl cursor-pointer transition-all has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:bg-brand-950 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                   >
                     <input
                       type="radio"
